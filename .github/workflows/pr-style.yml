@@ -1,0 +1,71 @@
+---
+name: pr-style
+
+on:
+  workflow_call:
+    inputs:
+      REQUIRE_BODY:
+        default: true
+        required: false
+        description: Rejects pull-requests without descriptions
+        type: boolean
+      CREATE_COMMENT:
+        default: true
+        required: false
+        description: Comments on pull requests failing checks
+        type: boolean
+    secrets:
+      GITHUB_TOKEN:
+        description: Optional GITHUB_TOKEN override
+        required: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+  check-style:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN || github.token }}
+
+      - name: Validate PR body
+        id: require-body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          PR_BODY=$(printf '%s' "$PR_BODY" | tr -d '[:space:]')
+
+          # Empty PR body is invalid
+          if [[ -z "$PR_BODY" ]]; then
+            echo "valid=false" | tee -a "$GITHUB_OUTPUT"
+          else
+            echo "valid=true" | tee -a "$GITHUB_OUTPUT"
+          fi
+      
+      - name: Update comment if invalid
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: inputs.CREATE_COMMENT == 'true' && steps.require-body.outputs.valid == 'false'
+        with:
+          recreate: true
+          header: pr-style
+          message: |
+            Please add a description to your pull request
+      
+      - name: Delete comment if valid
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: inputs.CREATE_COMMENT == 'true' && steps.require-body.outputs.valid == 'true'
+        with:
+          header: pr-style
+          delete: true
+      
+      - name: Reject invalid
+        if: inputs.REQUIRE_BODY == 'true' && steps.require-body.outputs.valid == 'false'
+        run: |
+            echo "::error::Validation failed"
+            exit 1
