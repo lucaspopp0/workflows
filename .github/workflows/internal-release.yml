@@ -1,4 +1,5 @@
-name: tag-and-release
+---
+name: internal-release
 
 on:
   push:

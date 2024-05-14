@@ -54,7 +54,7 @@ jobs:
           else
             echo "valid=true" | tee -a "$GITHUB_OUTPUT"
           fi
-      
+
       - name: Update comment if invalid
         uses: marocchino/sticky-pull-request-comment@v2
         if: inputs.CREATE_COMMENT && steps.require-body.outputs.valid == 'false'
@@ -63,16 +63,16 @@ jobs:
           header: pr-style
           message: |
             Please add a description to your pull request
-            
+
             Checked by [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-      
+
       - name: Delete comment if valid
         uses: marocchino/sticky-pull-request-comment@v2
         if: inputs.CREATE_COMMENT && steps.require-body.outputs.valid == 'true'
         with:
           header: pr-style
           delete: true
-      
+
       - name: Reject invalid
         if: inputs.REQUIRE_BODY && steps.require-body.outputs.valid == 'false'
         run: |
