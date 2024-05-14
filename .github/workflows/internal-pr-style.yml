@@ -10,6 +10,11 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
 jobs:
 
   pr-style:
