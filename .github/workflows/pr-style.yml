@@ -59,7 +59,7 @@ jobs:
       
       - name: Update comment if invalid
         uses: marocchino/sticky-pull-request-comment@v2
-        if: ${{ inputs.CREATE_COMMENT == 'true' && steps.require-body.outputs.valid == 'false' }}
+        if: inputs.CREATE_COMMENT && steps.require-body.outputs.valid == 'false'
         with:
           recreate: true
           header: pr-style
@@ -68,13 +68,13 @@ jobs:
       
       - name: Delete comment if valid
         uses: marocchino/sticky-pull-request-comment@v2
-        if: ${{ inputs.CREATE_COMMENT == 'true' && steps.require-body.outputs.valid == 'true' }}
+        if: inputs.CREATE_COMMENT && steps.require-body.outputs.valid == 'true'
         with:
           header: pr-style
           delete: true
       
       - name: Reject invalid
-        if: ${{ inputs.REQUIRE_BODY == 'true' && steps.require-body.outputs.valid == 'false' }}
+        if: inputs.REQUIRE_BODY && steps.require-body.outputs.valid == 'false'
         run: |
             echo "::error::Validation failed"
             exit 1
