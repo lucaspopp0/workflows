@@ -30,7 +30,7 @@ defaults:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ inputs.CANCEL_IN_PROGRESS }}
 
 jobs:
 
