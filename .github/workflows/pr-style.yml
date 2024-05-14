@@ -20,7 +20,7 @@ on:
         description: Set to false to allow multiple concurrent runs
         type: boolean
     secrets:
-      GITHUB_TOKEN:
+      GH_TOKEN:
         description: Optional GITHUB_TOKEN override
         required: false
 
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN || github.token }}
+          token: ${{ secrets.GH_TOKEN || github.token }}
 
       - name: Validate PR body
         id: require-body
