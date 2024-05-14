@@ -14,11 +14,6 @@ on:
         required: false
         description: Comments on pull requests failing checks
         type: boolean
-      CANCEL_IN_PROGRESS:
-        default: true
-        required: false
-        description: Set to false to allow multiple concurrent runs
-        type: boolean
     secrets:
       GH_TOKEN:
         description: Optional GITHUB_TOKEN override
@@ -30,7 +25,7 @@ defaults:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ inputs.CANCEL_IN_PROGRESS }}
+  cancel-in-progress: true
 
 jobs:
 
