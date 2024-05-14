@@ -62,7 +62,7 @@ jobs:
           recreate: true
           header: pr-style
           message: |
-            Please add a description to your pull request
+            Please add a description to your pull request (added by [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}))
       
       - name: Delete comment if valid
         uses: marocchino/sticky-pull-request-comment@v2
