@@ -1,0 +1,22 @@
+name: internal-pr-style
+
+on:
+  pull_request:
+    types:
+      - synchronize
+      - edited
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  pull-requests: write
+
+jobs:
+
+  pr-style:
+    uses: ./.github/workflows/pr-style.yml
+    with:
+      REQUIRE_BODY: true
+      CREATE_COMMENT: true
