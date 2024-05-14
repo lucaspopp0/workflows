@@ -1,0 +1,23 @@
+name: internal-pr-style
+
+on:
+  pull_request:
+    types:
+      - synchronize
+      - edited
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  pr-style:
+    uses: ./.github/workflows/pr-style.yml
+    with:
+      REQUIRE_BODY: true
+      CREATE_COMMENT: true
