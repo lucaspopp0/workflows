@@ -18,6 +18,3 @@ jobs:
 
   pr-style:
     uses: ./.github/workflows/pr-style.yml
-    with:
-      REQUIRE_BODY: true
-      CREATE_COMMENT: true
