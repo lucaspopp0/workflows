@@ -11,7 +11,7 @@ permissions:
 
 jobs:
 
-  tag-and-release:
+  release:
     uses: ./.github/workflows/tag-and-release.yml
     with:
       tag-prefix: v
