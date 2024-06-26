@@ -22,7 +22,7 @@ defaults:
 
 jobs:
 
-  tag:
+  tag-and-release:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -76,4 +76,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create '${{ steps.version.outputs.version_tag }}' --generate-notes >> $GITHUB_STEP_SUMMARY
+          RELEASE_URL=$(gh release create '${{ steps.version.outputs.version_tag }}' --generate-notes)
+          echo "Released [${{ steps.version.outputs.version_tag }}](${RELEASE_URL})" >> $GITHUB_STEP_SUMMARY
