@@ -61,8 +61,8 @@ jobs:
         if: ${{ steps.should-tag.outputs.should-tag == 'true' }}
         env:
           FULL_TAG: ${{ steps.version.outputs.version_tag }}
-          FLOATING_MAJOR: ${{ steps.version.outputs.major }}
-          FLOATING_MINOR: ${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
+          FLOATING_MAJOR: ${{ inputs.tag-prefix }}${{ steps.version.outputs.major }}
+          FLOATING_MINOR: ${{ inputs.tag-prefix }}${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
         run: |
           git tag "$FULL_TAG"
           git push origin "$FULL_TAG"
