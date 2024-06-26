@@ -17,6 +17,13 @@ on:
       GH_TOKEN:
         description: Optional token to use for Github operations
         required: false
+    outputs:
+      version:
+        value: ${{ jobs.tag-and-release.outputs.version }}
+      version-tag:
+        value: ${{ jobs.tag-and-release.outputs.version-tag }}
+      released:
+        value: ${{ jobs.tag-and-release.outputs.create-release }}
 
 permissions:
   contents: write
