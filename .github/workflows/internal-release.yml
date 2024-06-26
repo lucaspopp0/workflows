@@ -14,6 +14,7 @@ jobs:
   tag-and-release:
     uses: ./.github/workflows/tag-and-release.yml
     with:
+      tag-prefix: v
       change-filters: |
         workflows:
           - '.github/workflows/**'
