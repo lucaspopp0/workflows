@@ -39,10 +39,6 @@ on:
       - synchronize
       - edited
 
-defaults:
-  run:
-    shell: bash
-
 permissions:
   pull-requests: write
 
