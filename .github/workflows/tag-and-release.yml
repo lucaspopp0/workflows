@@ -7,7 +7,8 @@ on:
       tag-prefix:
         type: string
         required: false
-        description: Optional tag prefix
+        description: Tag prefix
+        default: v
       change-filters:
         type: string
         required: false
