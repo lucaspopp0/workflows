@@ -1,13 +1,14 @@
+---
 version: 2
 
 updates:
-
-- package-ecosystem: github-actions
-  directory: /
-  schedule:
-    interval: daily
-    timezone: America/Los_Angeles
-    time: "06:00"
-  ignore:
-    - dependency-name: '*'
-      update-types: ['version-update:semver-patch']
+  -
+    package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+      timezone: America/Los_Angeles
+      time: "06:00"
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-patch']
