@@ -12,6 +12,10 @@ on:
         type: string
         required: false
         description: Optional path filters for change detection
+    secrets:
+      GH_TOKEN:
+        description: Optional token to use for Github operations
+        required: false
 
 permissions:
   contents: write
@@ -33,6 +37,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN || github.token }}
       -
         uses: dorny/paths-filter@v3
         if: inputs.change-filters != ''
@@ -74,7 +79,7 @@ jobs:
         name: Create release
         if: ${{ steps.should-tag.outputs.should-tag == 'true' }}
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
         run: |
           RELEASE_URL=$(gh release create '${{ steps.version.outputs.version_tag }}' --generate-notes)
           echo "Released [${{ steps.version.outputs.version_tag }}](${RELEASE_URL})" >> $GITHUB_STEP_SUMMARY
