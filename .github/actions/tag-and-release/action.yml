@@ -12,6 +12,10 @@ inputs:
   change-filters:
     required: false
     description: Optional path filters for change detection
+  dry-run:
+    required: false
+    description: Don't actually create anything
+    default: 'false'
 
 outputs:
   version:
@@ -44,7 +48,18 @@ runs:
       id: should-tag
       shell: bash
       run: |
-        echo "should-tag=${{ (inputs.change-filters == '' || steps.detect-changes.outputs.changes != '[]') && steps.version.outputs.is_tagged == 'false' }}" | tee -a "$GITHUB_OUTPUT"
+        has_changes=${{ (inputs.change-filters == '' || steps.detect-changes.outputs.changes != '[]') }}
+        already_tagged=${{ steps.version.outputs.is_tagged }}
+
+        echo "has_changes=$has_changes"
+        echo "already_tagged=$already_tagged"
+
+        should_tag=false
+        if [[ "$has_changes" = "true" && "$already_tagged" = "false" ]]; then
+          should_tag=true
+        fi
+
+        echo "should-tag=$should_tag" | tee -a "$GITHUB_OUTPUT"
     -
       name: Tag commit
       shell: bash
@@ -54,6 +69,11 @@ runs:
         FLOATING_MAJOR: ${{ inputs.tag-prefix }}${{ steps.version.outputs.major }}
         FLOATING_MINOR: ${{ inputs.tag-prefix }}${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
       run: |
+        if [[ '${{ inputs.dry-run }}' = 'true' ]]; then
+          echo "Exiting early because dry-run != false"
+          exit 0
+        fi
+
         git tag "$FULL_TAG"
         git push origin "$FULL_TAG"
 
@@ -73,5 +93,10 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
+        if [[ '${{ inputs.dry-run }}' = 'true' ]]; then
+          echo "Exiting early because dry-run != false"
+          exit 0
+        fi
+
         RELEASE_URL=$(gh release create '${{ steps.version.outputs.version_tag }}' --generate-notes)
         echo "Released [${{ steps.version.outputs.version_tag }}](${RELEASE_URL})" >> $GITHUB_STEP_SUMMARY
