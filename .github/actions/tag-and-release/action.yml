@@ -32,17 +32,17 @@ runs:
   using: composite
   steps:
     -
-      uses: dorny/paths-filter@v3
-      if: inputs.change-filters != ''
-      id: detect-changes
-      with:
-        filters: ${{ inputs.change-filters }}
-    -
       name: Bump version
       id: version
       uses: paulhatch/semantic-version@v5.4.0
       with:
         tag_prefix: ${{ inputs.tag-prefix }}
+    -
+      uses: dorny/paths-filter@v3
+      if: inputs.change-filters != ''
+      id: detect-changes
+      with:
+        filters: ${{ inputs.change-filters }}
     -
       name: Should tag?
       id: should-tag
