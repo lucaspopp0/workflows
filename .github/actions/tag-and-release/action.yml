@@ -71,7 +71,7 @@ runs:
       shell: bash
       if: ${{ steps.should-tag.outputs.should-tag == 'true' }}
       env:
-        GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
+        GH_TOKEN: ${{ github.token }}
       run: |
         RELEASE_URL=$(gh release create '${{ steps.version.outputs.version_tag }}' --generate-notes)
         echo "Released [${{ steps.version.outputs.version_tag }}](${RELEASE_URL})" >> $GITHUB_STEP_SUMMARY
