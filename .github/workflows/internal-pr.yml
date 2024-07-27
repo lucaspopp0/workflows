@@ -70,7 +70,8 @@ jobs:
     if: ${{ always() }}
     steps:
       -
+        name: Check for failures
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')  }}
         run: |
-          echo "One or more jobs did not succeed: ${{ toJson(needs.*.result) }}"
+          echo "One or more jobs did not succeed"
           exit 1
