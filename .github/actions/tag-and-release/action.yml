@@ -1,3 +1,4 @@
+---
 name: 'Tag and Release'
 
 author: 'Lucas Popp'
@@ -12,6 +13,10 @@ inputs:
   change-filters:
     required: false
     description: Optional path filters for change detection
+  dry-run:
+    required: false
+    description: Don't actually create anything
+    default: 'false'
 
 outputs:
   version:
@@ -22,17 +27,11 @@ outputs:
     value: ${{ steps.version.outputs.version_tag }}
   released:
     description: Was any release needed?
-    value: ${{ steps.should-tag.outputs.should-tag }}
+    value: ${{ steps.should-tag.outputs.should-tag == 'true' && inputs.dry-run == 'false' }}
 
 runs:
   using: composite
   steps:
-    -
-      uses: dorny/paths-filter@v3
-      if: inputs.change-filters != ''
-      id: detect-changes
-      with:
-        filters: ${{ inputs.change-filters }}
     -
       name: Bump version
       id: version
@@ -40,20 +39,38 @@ runs:
       with:
         tag_prefix: ${{ inputs.tag-prefix }}
     -
-      name: Should tag?
-      id: should-tag
-      shell: bash
-      run: |
-        echo "should-tag=${{ (inputs.change-filters == '' || steps.detect-changes.outputs.changes != '[]') && steps.version.outputs.is_tagged == 'false' }}" | tee -a "$GITHUB_OUTPUT"
+      uses: dorny/paths-filter@v3
+      if: inputs.change-filters != ''
+      id: detect-changes
+      with:
+        filters: ${{ inputs.change-filters }}
     -
-      name: Tag commit
+      id: tag-and-release
       shell: bash
-      if: ${{ steps.should-tag.outputs.should-tag == 'true' }}
       env:
+        GH_TOKEN: ${{ github.token }}
         FULL_TAG: ${{ steps.version.outputs.version_tag }}
         FLOATING_MAJOR: ${{ inputs.tag-prefix }}${{ steps.version.outputs.major }}
         FLOATING_MINOR: ${{ inputs.tag-prefix }}${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
       run: |
+        # Check if should tag
+        has_changes=${{ (inputs.change-filters == '' || steps.detect-changes.outputs.changes != '[]') }}
+        already_tagged=${{ steps.version.outputs.is_tagged }}
+
+        should_tag=false
+        if [[ "$has_changes" = "true" && "$already_tagged" = "false" ]]; then
+          should_tag=true
+        fi
+
+        echo "has_changes=$has_changes"
+        echo "already_tagged=$already_tagged"
+        echo "should-tag=$should_tag"
+
+        if [[ '${{ inputs.dry-run }}' = 'true' ]]; then
+          echo "Exiting early because dry-run != false"
+          exit 0
+        fi
+
         git tag "$FULL_TAG"
         git push origin "$FULL_TAG"
 
@@ -66,12 +83,6 @@ runs:
         git tag --delete "$FLOATING_MAJOR" || true
         git tag "$FLOATING_MAJOR"
         git push origin "$FLOATING_MAJOR"
-    -
-      name: Create release
-      shell: bash
-      if: ${{ steps.should-tag.outputs.should-tag == 'true' }}
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
+
         RELEASE_URL=$(gh release create '${{ steps.version.outputs.version_tag }}' --generate-notes)
-        echo "Released [${{ steps.version.outputs.version_tag }}](${RELEASE_URL})" >> $GITHUB_STEP_SUMMARY
+        echo "release-url=${RELEASE_URL}" >> "$GITHUB_OUTPUT"

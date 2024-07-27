@@ -17,6 +17,7 @@ jobs:
       tag-prefix: v
       change-filters: |
         workflows:
+          - '.github/actions/**'
           - '.github/workflows/pr-style.yml'
           - '.github/workflows/tag-and-release.yml'
     secrets: inherit

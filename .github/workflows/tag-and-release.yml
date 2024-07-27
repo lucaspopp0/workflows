@@ -13,6 +13,10 @@ on:
         type: string
         required: false
         description: Optional path filters for change detection
+      dry-run:
+        type: boolean
+        required: false
+        default: false
     secrets:
       GH_TOKEN:
         description: Optional token to use for Github operations
@@ -47,8 +51,15 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN || github.token }}
       -
+        name: Tag and release
         uses: ./.github/actions/tag-and-release
         id: tag-and-release
         with:
           tag-prefix: ${{ inputs.tag-prefix }}
           change-filters: ${{ inputs.change-filters }}
+          dry-run: ${{ inputs.dry-run }}
+      -
+        name: Add release URL to summary
+        if: ${{ steps.tag-and-release.outputs.released == 'true' }}
+        run: |
+          echo "Released [${{ steps.tag-and-release.outputs.version_tag }}](${{ steps.tag-and-release.outputs.release-url }})" >> $GITHUB_STEP_SUMMARY
