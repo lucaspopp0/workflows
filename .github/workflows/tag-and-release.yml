@@ -37,9 +37,9 @@ jobs:
   tag-and-release:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.version.outputs.version }}
-      version-tag: ${{ steps.version.outputs.version_tag }}
-      create-release: ${{ steps.should-tag.outputs.should-tag }}
+      version: ${{ steps.tag-and-release.outputs.version }}
+      version-tag: ${{ steps.tag-and-release.outputs.version_tag }}
+      create-release: ${{ steps.tag-and-release.outputs.should-tag }}
     steps:
       -
         uses: actions/checkout@v4
@@ -47,47 +47,8 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN || github.token }}
       -
-        uses: dorny/paths-filter@v3
-        if: inputs.change-filters != ''
-        id: detect-changes
+        uses: ./.github/actions/tag-and-release
+        id: tag-and-release
         with:
-          filters: ${{ inputs.change-filters }}
-      -
-        name: Bump version
-        id: version
-        uses: paulhatch/semantic-version@v5.4.0
-        with:
-          tag_prefix: ${{ inputs.tag-prefix }}
-      -
-        name: Should tag?
-        id: should-tag
-        run: |
-          echo "should-tag=${{ (inputs.change-filters == '' || steps.detect-changes.outputs.changes != '[]') && steps.version.outputs.is_tagged == 'false' }}" | tee -a "$GITHUB_OUTPUT"
-      -
-        name: Tag commit
-        if: ${{ steps.should-tag.outputs.should-tag == 'true' }}
-        env:
-          FULL_TAG: ${{ steps.version.outputs.version_tag }}
-          FLOATING_MAJOR: ${{ inputs.tag-prefix }}${{ steps.version.outputs.major }}
-          FLOATING_MINOR: ${{ inputs.tag-prefix }}${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
-        run: |
-          git tag "$FULL_TAG"
-          git push origin "$FULL_TAG"
-
-          git push --delete origin "$FLOATING_MINOR" || true
-          git tag --delete "$FLOATING_MINOR" || true
-          git tag "$FLOATING_MINOR"
-          git push origin "$FLOATING_MINOR"
-
-          git push --delete origin "$FLOATING_MAJOR" || true
-          git tag --delete "$FLOATING_MAJOR" || true
-          git tag "$FLOATING_MAJOR"
-          git push origin "$FLOATING_MAJOR"
-      -
-        name: Create release
-        if: ${{ steps.should-tag.outputs.should-tag == 'true' }}
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
-        run: |
-          RELEASE_URL=$(gh release create '${{ steps.version.outputs.version_tag }}' --generate-notes)
-          echo "Released [${{ steps.version.outputs.version_tag }}](${RELEASE_URL})" >> $GITHUB_STEP_SUMMARY
+          tag-prefix: ${{ inputs.tag-prefix }}
+          change-filters: ${{ inputs.change-filters }}
