@@ -13,6 +13,23 @@ defaults:
 
 jobs:
 
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      workflows-changed: ${{ steps.detect-changes.outputs.workflows == 'true' }}
+    steps:
+      -
+        uses: actions/checkout@v4
+      -
+        uses: dorny/paths-filter@v3
+        id: detect-changes
+        with:
+          filters:  |
+            workflows:
+              - '.github/actions/**'
+              - '.github/workflows/pr-style.yml'
+              - '.github/workflows/tag-and-release.yml'
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -24,3 +41,16 @@ jobs:
 
       - name: Lint
         run: make lint
+
+  preview-release:
+    needs: [setup]
+    if: ${{ needs.setup.outputs.workflows-changed }}
+    uses: ./.github/workflows/tag-and-release.yml
+    with:
+      dry-run: true
+      tag-prefix: v
+      change-filters: |
+        workflows:
+          - '.github/actions/**'
+          - '.github/workflows/pr-style.yml'
+          - '.github/workflows/tag-and-release.yml'

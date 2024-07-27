@@ -13,6 +13,10 @@ on:
         type: string
         required: false
         description: Optional path filters for change detection
+      dry-run:
+        type: boolean
+        required: false
+        default: false
     secrets:
       GH_TOKEN:
         description: Optional token to use for Github operations
@@ -52,3 +56,4 @@ jobs:
         with:
           tag-prefix: ${{ inputs.tag-prefix }}
           change-filters: ${{ inputs.change-filters }}
+          dry-run: ${{ inputs.dry-run }}
