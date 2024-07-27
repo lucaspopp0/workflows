@@ -36,7 +36,7 @@ jobs:
 
   lint:
     needs: [setup]
-    if: ${{ needs.setup.outputs.any-workflow-changed }}
+    if: ${{ needs.setup.outputs.any-workflow-changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
       -
@@ -50,7 +50,7 @@ jobs:
 
   preview-release:
     needs: [setup]
-    if: ${{ needs.setup.outputs.external-workflow-changed }}
+    if: ${{ needs.setup.outputs.external-workflow-changed == 'true' }}
     uses: ./.github/workflows/tag-and-release.yml
     with:
       dry-run: true
@@ -70,7 +70,8 @@ jobs:
     if: ${{ always() }}
     steps:
       -
+        name: Check for failures
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')  }}
         run: |
-          echo "One or more jobs did not succeed: ${{ toJson(needs.*.result) }}"
+          echo "One or more jobs did not succeed"
           exit 1
