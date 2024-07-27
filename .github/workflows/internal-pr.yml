@@ -16,7 +16,8 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      workflows-changed: ${{ steps.detect-changes.outputs.workflows == 'true' }}
+      any-workflow-changed: ${{ steps.detect-changes.outputs.any_workflow == 'true' }}
+      external-workflow-changed: ${{ steps.detect-changes.outputs.external_workflows == 'true' }}
     steps:
       -
         uses: actions/checkout@v4
@@ -25,26 +26,31 @@ jobs:
         id: detect-changes
         with:
           filters: |
-            workflows:
+            any_workflow:
+              - '.github/actions/**'
+              - '.github/workflows/**'
+            external_workflows:
               - '.github/actions/**'
               - '.github/workflows/pr-style.yml'
               - '.github/workflows/tag-and-release.yml'
 
   lint:
+    needs: [setup]
+    if: ${{ needs.setup.outputs.any-workflow-changed }}
     runs-on: ubuntu-latest
     steps:
-
-      - uses: actions/checkout@v4
-
-      - name: Install yamllint
+      -
+        uses: actions/checkout@v4
+      -
+        name: Install yamllint
         run: sudo apt-get install yamllint
-
-      - name: Lint
+      -
+        name: Lint
         run: make lint
 
   preview-release:
     needs: [setup]
-    if: ${{ needs.setup.outputs.workflows-changed }}
+    if: ${{ needs.setup.outputs.external-workflow-changed }}
     uses: ./.github/workflows/tag-and-release.yml
     with:
       dry-run: true
@@ -54,3 +60,17 @@ jobs:
           - '.github/actions/**'
           - '.github/workflows/pr-style.yml'
           - '.github/workflows/tag-and-release.yml'
+
+  pr-ready:
+    runs-on: ubuntu-latest
+    needs:
+      - setup
+      - lint
+      - preview-release
+    if: ${{ always() }}
+    steps:
+      -
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')  }}
+        run: |
+          echo "One or more jobs did not succeed: ${{ toJson(needs.*.result) }}"
+          exit 1
