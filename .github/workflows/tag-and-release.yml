@@ -58,3 +58,8 @@ jobs:
           tag-prefix: ${{ inputs.tag-prefix }}
           change-filters: ${{ inputs.change-filters }}
           dry-run: ${{ inputs.dry-run }}
+      -
+        name: Add release URL to summary
+        if: ${{ steps.tag-and-release.outputs.released }}
+        run: |
+          echo "Released [${{ steps.tag-and-release.outputs.version_tag }}](${{ steps.tag-and-release.outputs.release-url }})" >> $GITHUB_STEP_SUMMARY
