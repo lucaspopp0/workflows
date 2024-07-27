@@ -51,6 +51,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN || github.token }}
       -
+        name: Tag and release
         uses: ./.github/actions/tag-and-release
         id: tag-and-release
         with:
