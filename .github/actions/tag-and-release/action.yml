@@ -1,0 +1,77 @@
+name: 'Tag and Release'
+
+author: 'Lucas Popp'
+
+description: ''
+
+inputs:
+  tag-prefix:
+    required: false
+    description: Tag prefix
+    default: v
+  change-filters:
+    required: false
+    description: Optional path filters for change detection
+
+outputs:
+  version:
+    description: The tagged version
+    value: ${{ steps.version.outputs.version }}
+  version-tag:
+    description: The tag value
+    value: ${{ steps.version.outputs.version_tag }}
+  released:
+    description: Was any release needed?
+    value: ${{ steps.should-tag.outputs.should-tag }}
+
+runs:
+  using: composite
+  steps:
+    -
+      uses: dorny/paths-filter@v3
+      if: inputs.change-filters != ''
+      id: detect-changes
+      with:
+        filters: ${{ inputs.change-filters }}
+    -
+      name: Bump version
+      id: version
+      uses: paulhatch/semantic-version@v5.4.0
+      with:
+        tag_prefix: ${{ inputs.tag-prefix }}
+    -
+      name: Should tag?
+      id: should-tag
+      shell: bash
+      run: |
+        echo "should-tag=${{ (inputs.change-filters == '' || steps.detect-changes.outputs.changes != '[]') && steps.version.outputs.is_tagged == 'false' }}" | tee -a "$GITHUB_OUTPUT"
+    -
+      name: Tag commit
+      shell: bash
+      if: ${{ steps.should-tag.outputs.should-tag == 'true' }}
+      env:
+        FULL_TAG: ${{ steps.version.outputs.version_tag }}
+        FLOATING_MAJOR: ${{ inputs.tag-prefix }}${{ steps.version.outputs.major }}
+        FLOATING_MINOR: ${{ inputs.tag-prefix }}${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
+      run: |
+        git tag "$FULL_TAG"
+        git push origin "$FULL_TAG"
+
+        git push --delete origin "$FLOATING_MINOR" || true
+        git tag --delete "$FLOATING_MINOR" || true
+        git tag "$FLOATING_MINOR"
+        git push origin "$FLOATING_MINOR"
+
+        git push --delete origin "$FLOATING_MAJOR" || true
+        git tag --delete "$FLOATING_MAJOR" || true
+        git tag "$FLOATING_MAJOR"
+        git push origin "$FLOATING_MAJOR"
+    -
+      name: Create release
+      shell: bash
+      if: ${{ steps.should-tag.outputs.should-tag == 'true' }}
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
+      run: |
+        RELEASE_URL=$(gh release create '${{ steps.version.outputs.version_tag }}' --generate-notes)
+        echo "Released [${{ steps.version.outputs.version_tag }}](${RELEASE_URL})" >> $GITHUB_STEP_SUMMARY
