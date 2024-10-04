@@ -52,7 +52,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN || github.token }}
       -
         name: Tag and release
-        uses: ./.github/actions/tag-and-release
+        uses: lucaspopp0/workflows/.github/actions/tag-and-release@v1
         id: tag-and-release
         with:
           tag-prefix: ${{ inputs.tag-prefix }}
