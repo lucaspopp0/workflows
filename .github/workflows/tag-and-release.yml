@@ -46,7 +46,7 @@ jobs:
       create-release: ${{ steps.tag-and-release.outputs.should-tag }}
     steps:
       -
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN || github.token }}
